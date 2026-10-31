@@ -1,6 +1,6 @@
 #TABLE DIMENSINOS AND POCKETS
-WINDOW_W = 1000
-WINDOW_H = 560
+WINDOW_W = 1280
+WINDOW_H = 720
 MARGIN = 50
 # Table dimensions in millimetres (approximate full-size snooker table)
 TABLE_LENGTH_MM = 3569
