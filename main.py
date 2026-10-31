@@ -3,6 +3,7 @@
 import pygame
 import math
 from table import *
+from geometry import ghost_ball_position, is_straight_shot_possible
 
 pygame.init()
 screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
@@ -18,12 +19,13 @@ balls = {
 }
 
 dragging = None          # name of ball being dragged, or None
-selected_pocket = 0      # index into POCKETS_MM; start with the first pocket
-GRAB_RADIUS_MM = BALL_RADIUS_MM * 2             # forgiving click area for balls
-POCKET_CLICK_RADIUS_MM = POCKET_RADIUS_MM * 2   # forgiving click area for pockets
+selected_pocket = 0      # index into POCKETS_MM
+GRAB_RADIUS_MM = BALL_RADIUS_MM * 2
+POCKET_CLICK_RADIUS_MM = POCKET_RADIUS_MM * 2
+font = pygame.font.SysFont(None, 28)
 
 while running:
-    # ---------- EVENTS: change the state ----------
+    #EVENTS
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -64,15 +66,39 @@ while running:
     for x_mm, y_mm in POCKETS_MM:
         pygame.draw.circle(screen, (0, 0, 0), mm_to_px(x_mm, y_mm), pocket_radius_px)
 
-    # highlight ring on the selected pocket (drawn after pockets, so it's on top)
-    sel_center = mm_to_px(*POCKETS_MM[selected_pocket])
-    pygame.draw.circle(screen, (255, 220, 0), sel_center, pocket_radius_px + 4, 3)
+    # highlight ring on the selected pocket
+    pocket = POCKETS_MM[selected_pocket]
+    pygame.draw.circle(screen, (255, 220, 0), mm_to_px(*pocket), pocket_radius_px + 4, 3)
 
-    # balls
+    # recompute the ghost ball every frame from the current state
+    try:
+        ghost = ghost_ball_position(balls["target"], pocket, BALL_RADIUS_MM)
+    except ValueError:
+        ghost = None  # target is exactly on the pocket centre
+
+    # aiming lines (drawn BEFORE the balls so the balls sit on top)
+    pygame.draw.line(screen, (255, 220, 0),
+                     mm_to_px(*balls["target"]), mm_to_px(*pocket), 2)
+    shot_ok = False
+    if ghost is not None:
+        shot_ok = is_straight_shot_possible(balls["cue"], ghost, balls["target"], pocket)
+        line_colour = (220, 220, 220) if shot_ok else (220, 50, 50)
+        pygame.draw.line(screen, line_colour,
+                         mm_to_px(*balls["cue"]), mm_to_px(*ghost), 2)
+
+    # real balls
     ball_radius_px = round(BALL_RADIUS_MM * SCALE)
     pygame.draw.circle(screen, (255, 255, 255), mm_to_px(*balls["cue"]), ball_radius_px)
     pygame.draw.circle(screen, (200, 30, 30), mm_to_px(*balls["target"]), ball_radius_px)
 
+    # ghost ball: outline only, so it reads as imaginary
+    if ghost is not None:
+        pygame.draw.circle(screen, (255, 255, 255), mm_to_px(*ghost), ball_radius_px, 2)
+
+    if ghost is not None and not shot_ok:
+        text = font.render("Straight shot not possible", True, (255, 120, 120))
+        screen.blit(text, (20, 10))
+    
     pygame.display.flip()
     clock.tick(60)
 
