@@ -23,3 +23,6 @@ Planned (not yet built):
 The ghost ball is an ** idealised geometric solution**. It does not
 account for spin, speed, throw, cushion effects or pocket jaw shape,
 so it doesn't guarantee a successful real-world shot.
+
+
+TODO: add real table and ball dimentions to the program 
