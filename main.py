@@ -97,7 +97,7 @@ while running:
     draw.draw_pockets(screen, selected_pocket)
     draw.draw_aim_lines(screen, balls["cue"], aim_ball, pocket, ghost, shot_ok)
     draw.draw_balls(screen, balls, target_name)
-    draw.draw_ghost(screen, ghost)
+    draw.draw_ghost(screen, ghost, shot_ok)
     draw.draw_text(screen, font, messages)
 
     pygame.display.flip()
