@@ -1,5 +1,6 @@
 # ALL DRAWING CODE
 import pygame
+import math
 from table import (
     WINDOW_H, ORIGIN_X, ORIGIN_Y, SCALE,
     TABLE_LENGTH_MM, TABLE_WIDTH_MM,
@@ -61,9 +62,46 @@ def draw_pockets(screen, selected_pocket):
     selected = POCKETS_MM[selected_pocket]
     pygame.draw.circle(screen, HIGHLIGHT, mm_to_px(*selected), radius + 6, 3)
     
+def draw_dashed_line(screen, colour, start, end, width=2, dash=10, gap=7):
+    """Draw a dashed line from start to end (pixel coordinates)."""
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    length = math.hypot(dx, dy)
+    if length == 0:
+        return
+    ux, uy = dx / length, dy / length
+    pos = 0
+    while pos < length:
+        seg_end = min(pos + dash, length)
+        a = (start[0] + ux * pos, start[1] + uy * pos)
+        b = (start[0] + ux * seg_end, start[1] + uy * seg_end)
+        pygame.draw.line(screen, colour, a, b, width)
+        pos += dash + gap
+
+
+def draw_arrowhead(screen, colour, tip, direction, size=14):
+    """Filled triangle with its point at tip, aimed along direction (ux, uy)."""
+    ux, uy = direction
+    px, py = -uy, ux  # perpendicular to the direction
+    base = (tip[0] - ux * size, tip[1] - uy * size)
+    left = (base[0] + px * size * 0.45, base[1] + py * size * 0.45)
+    right = (base[0] - px * size * 0.45, base[1] - py * size * 0.45)
+    pygame.draw.polygon(screen, colour, [tip, left, right])
+
+
 def draw_aim_lines(screen, cue, aim_ball, pocket, ghost, shot_ok):
-    """Ball-to-pocket line, and cue-to-ghost line if a ghost exists."""
-    pygame.draw.line(screen, HIGHLIGHT, mm_to_px(*aim_ball), mm_to_px(*pocket), 2)
+    """Dashed ball-to-pocket line with arrowhead; solid cue-to-ghost line."""
+    start = mm_to_px(*aim_ball)
+    end = mm_to_px(*pocket)
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    length = math.hypot(dx, dy)
+    if length > 0:
+        u = (dx / length, dy / length)
+        # stop the arrow at the pocket's edge, not its centre
+        pocket_r = round(POCKET_RADIUS_MM * SCALE)
+        tip = (end[0] - u[0] * pocket_r, end[1] - u[1] * pocket_r)
+        draw_dashed_line(screen, HIGHLIGHT, start, tip, 2)
+        draw_arrowhead(screen, HIGHLIGHT, tip, u)
+
     if ghost is not None:
         colour = LINE_OK if shot_ok else LINE_BAD
         pygame.draw.line(screen, colour, mm_to_px(*cue), mm_to_px(*ghost), 2)
@@ -94,13 +132,19 @@ def draw_balls(screen, balls, aim_name):
     radius = round(BALL_RADIUS_MM * SCALE)
     for name, pos in balls.items():
         draw_ball(screen, mm_to_px(*pos), radius, BALL_COLOURS[name])
-    pygame.draw.circle(screen, HIGHLIGHT, mm_to_px(*balls[aim_name]), radius + 4, 2)
+    pygame.draw.circle(screen, HIGHLIGHT, mm_to_px(*balls[aim_name]), radius + 2, 2)
     
-def draw_ghost(screen, ghost):
-    """Outline-only ghost ball, so it reads as imaginary."""
-    if ghost is not None:
-        radius = round(BALL_RADIUS_MM * SCALE)
-        pygame.draw.circle(screen, LINE_OK, mm_to_px(*ghost), radius, 2)
+def draw_ghost(screen, ghost, shot_ok=True):
+    """Translucent ghost ball with an outline."""
+    if ghost is None:
+        return
+    radius = round(BALL_RADIUS_MM * SCALE)
+    colour = LINE_OK if shot_ok else LINE_BAD
+    size = radius * 2 + 4
+    overlay = pygame.Surface((size, size), pygame.SRCALPHA)  # supports transparency
+    pygame.draw.circle(overlay, (*colour, 70), (size // 2, size // 2), radius)
+    screen.blit(overlay, (mm_to_px(*ghost)[0] - size // 2, mm_to_px(*ghost)[1] - size // 2))
+    pygame.draw.circle(screen, colour, mm_to_px(*ghost), radius, 2)
 
 
 def draw_text(screen, font, messages):
