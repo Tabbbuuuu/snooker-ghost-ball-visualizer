@@ -3,9 +3,9 @@ WINDOW_W = 1280
 WINDOW_H = 720
 MARGIN = 50
 # Table dimensions in millimetres (approximate full-size snooker table)
-TABLE_LENGTH_MM = 3569
-TABLE_WIDTH_MM = 1778
-BALL_DIAMETER_MM = 52.5
+TABLE_LENGTH_MM = 2580
+TABLE_WIDTH_MM = 1290
+BALL_DIAMETER_MM = 50.8
 BALL_RADIUS_MM = BALL_DIAMETER_MM / 2
 POCKET_RADIUS_MM = 45  # rough visual size, not an official measurement
 
