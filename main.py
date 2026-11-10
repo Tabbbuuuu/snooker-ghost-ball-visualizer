@@ -2,7 +2,11 @@
 
 import pygame
 import math
-from table import *
+from table import (
+    WINDOW_W, WINDOW_H, TABLE_LENGTH_MM, TABLE_WIDTH_MM,
+    BALL_RADIUS_MM, POCKET_RADIUS_MM, POCKETS_MM,
+    ORIGIN_X, ORIGIN_Y, SCALE, mm_to_px, px_to_mm,
+)
 from geometry import *
 
 pygame.init()
@@ -16,12 +20,12 @@ running = True
 balls = {
     "cue": (TABLE_LENGTH_MM * 0.25, TABLE_WIDTH_MM * 0.5),
     "target": (TABLE_LENGTH_MM * 0.60, TABLE_WIDTH_MM * 0.40),
-    "blocker": (TABLE_LENGTH_MM * 0.50, TABLE_WIDTH_MM * 0.80),
+    "ball2": (TABLE_LENGTH_MM * 0.50, TABLE_WIDTH_MM * 0.80),
 }
 
 dragging = None          # name of ball being dragged, or None
 selected_pocket = 0      # index into POCKETS_MM
-target_name = "target"   # which ball we're aiming at: "target" or "blocker"
+target_name = "target"   # which ball we're aiming at: "target" or "ball2"
 GRAB_RADIUS_MM = BALL_RADIUS_MM * 2
 POCKET_CLICK_RADIUS_MM = POCKET_RADIUS_MM * 2
 font = pygame.font.SysFont(None, 28)
@@ -60,7 +64,7 @@ while running:
                 balls[dragging] = new_pos
 
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_t:
-            target_name = "blocker" if target_name == "target" else "target"
+            target_name = "ball2" if target_name == "target" else "target"
 
     # DRAWING
     screen.fill((30, 30, 30))
@@ -84,7 +88,7 @@ while running:
 
     # which ball are we aiming at, and which one is the obstacle?
     aim_ball = balls[target_name]
-    obstacle_name = "blocker" if target_name == "target" else "target"
+    obstacle_name = "ball2" if target_name == "target" else "target"
     obstacle = balls[obstacle_name]
 
     # recompute the ghost ball every frame from the current state
@@ -107,7 +111,7 @@ while running:
     ball_radius_px = round(BALL_RADIUS_MM * SCALE)
     pygame.draw.circle(screen, (255, 255, 255), mm_to_px(*balls["cue"]), ball_radius_px)
     pygame.draw.circle(screen, (200, 30, 30), mm_to_px(*balls["target"]), ball_radius_px)
-    pygame.draw.circle(screen, (230, 200, 0), mm_to_px(*balls["blocker"]), ball_radius_px)
+    pygame.draw.circle(screen, (230, 200, 0), mm_to_px(*balls["ball2"]), ball_radius_px)
 
     # ring around the ball we're aiming at
     pygame.draw.circle(screen, (255, 220, 0), mm_to_px(*aim_ball), ball_radius_px + 1 , 2)
